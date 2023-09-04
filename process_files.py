@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import csv
 
 def list_files_in_directory(directory_path):
     try:
@@ -21,51 +22,40 @@ files = list_files_in_directory(directory_path)
 print("List of files in the directory:")
 print(files)
 
-max_peak = 0
-max_peak_idx = -1
-max_peak_ch = -1
-max_thd = 0
-max_thd_idx = -1
-max_thd_ch = -1
-max_dBc = -100
-max_dBc_idx = -1
-max_dBc_ch = -1
-idx=-1
-max_dBc_harmonic=1000
+
+idx=0
+no_of_channels=4
+records = [['na' for _ in range(8)] for _ in range(len(files)*no_of_channels+1)]
+records[0][:] = ['index','file_name','channel','peak_amplitude','peak_time_ms','THD','dBc','dBc_harmonic']
 for file in files:
-    idx=idx+1
-    for channel in range(4):
-        print("i=",idx, " channel=", channel, "file=", file)
+    print("file=", file)
+    for channel in range(no_of_channels):
+        idx=idx+1
+        print("channel=", channel)
+        records[idx][0:2] = [str(idx), file, str(channel)]
+
         completed_process = subprocess.run(['python3', 'wav_peak.py', directory_path+file, str(channel)], capture_output=True, text=True)
-        print("Peak data",completed_process.stdout)
         return_values = completed_process.stdout.strip().split()
         if len(return_values) == 2:
-            stats = [float(string) for string in return_values]
-            if abs(stats[0]) > abs(max_peak):
-                max_peak = stats[0]
-                max_peak_idx = idx
-                max_peak_ch = channel
+            records[idx][3:4] = return_values
 
         completed_process = subprocess.run(['python3', 'wav_thd.py', directory_path+file, str(channel)], capture_output=True, text=True)
-        print("THD data",completed_process.stdout)
         return_values = completed_process.stdout.strip().split()
         if len(return_values) < 3:
             continue
-        stats = [float(string) for string in return_values]
-        if stats[0] > max_thd:
-            max_thd = stats[0]
-            max_thd_idx = idx
-            max_thd_ch = channel
-        if stats[1] > max_dBc:
-            max_dBc = stats[1]
-            max_dBc_harmonic = stats[2]
-            max_dBc_idx = idx
-            max_dBc_ch = channel
+        else:
+            records[idx][5:7] = return_values
 
+# Specify the CSV file name
+csv_filename = "audio_analysis_output.csv"
 
-print("Highest peak file is", files[max_peak_idx], "with peak=", max_peak,"for channel", max_peak_ch)
-if max_thd_idx >= 0 and max_dBc_idx >= 0:
-    print("Worst case THD file is", files[max_thd_idx], "with THD=", round(max_thd*100,1),"% for channel", max_thd_ch)
-    print("Worst case dBc file is", files[max_dBc_idx], "with dBc=", round(max_dBc,1), "dB at harmonic", int(max_dBc_harmonic),"for channel", max_dBc_ch)
-else:
-    print("negative index, thd=", max_thd_idx,"dBc=", max_dBc_idx)
+# Open the CSV file in write mode
+with open(csv_filename, mode='w', newline='') as csv_file:
+    # Create a CSV writer object
+    csv_writer = csv.writer(csv_file)
+
+    # Write each row of the array to the CSV file
+    for row in records:
+        csv_writer.writerow(row)
+
+print(f"Array has been written to {csv_filename}")
