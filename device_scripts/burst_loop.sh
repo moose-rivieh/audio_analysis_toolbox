@@ -19,7 +19,9 @@ mic_card="imxaudiomicfil"
 mic_format="S16_LE"
 mic_rate="16000"
 mic_chs="4"
-spk_fomrat="S32LE"
+spk_card="tas5805mamp"
+spk_format="S32_LE"
+spk_format_gst="S32LE"
 spk_rate="48000"
 spk_chs="2"
 
@@ -33,9 +35,9 @@ fi
 # Loop through the range
 for ((freq = end; freq >= start; freq=6*(freq/7))); do
     duration=$(((freq*3)/2)) #1.5seconds
-    echo $duration
     echo "Frequency = $freq @ $vol volume"
-    arecord -Dhw:${mic_card},0 -f${mic_format} -r${mic_rate} -c${mic_chs} -d7 -twav ${path}freq_${freq}.wav & 
-    gst-launch-1.0 audiotestsrc wave=8 freq=$freq volume=$vol num-buffers=336 tick_interval=2000000000 sine-periods-per-tick=$duration marker-tick-period=2 marker-tick-volume=0.25 ! audio/x-raw,format=${spk_fomrat},rate=${spk_rate},channels=${spk_chs} ! alsasink  
+    arecord -Dhw:${mic_card},0 -f${mic_format} -r${mic_rate} -c${mic_chs} -d6 -twav ${path}mic_freq_${freq}.wav & \ 
+    gst-launch-1.0 audiotestsrc wave=8 freq=$freq volume=$vol num-buffers=336 tick_interval=2000000000 sine-periods-per-tick=$duration marker-tick-period=2 marker-tick-volume=0.25 ! audio/x-raw,format=${spk_format_gst},rate=${spk_rate},channels=${spk_chs} ! alsasink  & \
+    arecord -Dhw:${spk_card},0 -f${spk_format} -r${spk_rate} -c${spk_chs} -d6 -twav ${path}ref_freq_${freq}.wav	
     sleep 2 
 done

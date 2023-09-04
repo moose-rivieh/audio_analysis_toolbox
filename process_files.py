@@ -25,26 +25,31 @@ print(files)
 
 idx=0
 no_of_channels=4+1 #+1 for the for case where we average all channels
-records = [['na' for _ in range(8)] for _ in range(len(files)*no_of_channels+1)]
-records[0][:] = ['index','file_name','channel','peak_amplitude','peak_time_ms','THD','dBc','dBc_harmonic']
+records = [['na' for _ in range(10)] for _ in range(len(files)*no_of_channels+1)]
+records[0][:] = ['index','file','source','freq_Hz','channel','peak_amplitude','peak_time_ms','THD','dBc','dBc_harmonic']
 for file in files:
     print("file=", file)
     for channel in range(no_of_channels):
         idx=idx+1
         print("channel=", channel)
-        records[idx][0:2] = [str(idx), file, str(channel)]
+        #expect the following filename formate SRC_freq_xxx.wav
+        file_name = file[:-4] #remove .wav
+        source = file_name[:3] #get source. Either mic or ref
+        freq = file_name[9:] #drop _freq_
+        
+        records[idx][0:4] = [str(idx), file, source, freq, str(channel)]
 
         completed_process = subprocess.run(['python3', 'wav_peak.py', directory_path+file, str(channel)], capture_output=True, text=True)
         return_values = completed_process.stdout.strip().split()
         if len(return_values) == 2:
-            records[idx][3:4] = return_values
+            records[idx][5:6] = return_values
 
         completed_process = subprocess.run(['python3', 'wav_thd.py', directory_path+file, str(channel)], capture_output=True, text=True)
         return_values = completed_process.stdout.strip().split()
         if len(return_values) < 3:
             continue
         else:
-            records[idx][5:7] = return_values
+            records[idx][7:9] = return_values
 
 # Specify the CSV file name
 csv_filename = "audio_analysis_output.csv"

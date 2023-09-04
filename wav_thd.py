@@ -8,7 +8,7 @@ from librosa import display
 
 def main(wav_file, channel, debug):
   fs = librosa.get_samplerate(wav_file)
-  multi_data, fs = librosa.load(wav_file, sr=fs, offset=5,duration=1, mono=False)
+  multi_data, fs = librosa.load(wav_file, sr=fs, offset=4.5,duration=1, mono=False)
   if channel < multi_data.shape[0]:
     data = multi_data[channel,:]
   else:
