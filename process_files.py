@@ -24,7 +24,7 @@ print(files)
 
 
 idx=0
-no_of_channels=4
+no_of_channels=4+1 #+1 for the for case where we average all channels
 records = [['na' for _ in range(8)] for _ in range(len(files)*no_of_channels+1)]
 records[0][:] = ['index','file_name','channel','peak_amplitude','peak_time_ms','THD','dBc','dBc_harmonic']
 for file in files:

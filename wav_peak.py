@@ -9,7 +9,11 @@ from librosa import display
 def main(wav_file, channel, debug):
   fs = librosa.get_samplerate(wav_file)
   multi_data, fs = librosa.load(wav_file, sr=fs, offset=0.9, mono=False)
-  data = multi_data[channel,:]
+  if channel < multi_data.shape[0]:
+    data = multi_data[channel,:]
+  else:
+    data = librosa.to_mono(multi_data)
+
   Ns = len(data)
   duration = Ns/fs
   if debug>0:
